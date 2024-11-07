@@ -114,13 +114,16 @@ app.use('/api/RepairRequisition',RepairRequisition)
 // Logout route
 app.post('/api/logout', (req, res) => {
   console.log('Logout request received');
-  try {
-    res.status(200).json({ message: 'Logged out successfully. Please !!!.' });
-  } catch (err) {
-    console.error('Error during logout:', err); // Log the error
-    res.status(500).json({ message: 'Server error during logout' });
-  }
+  // Clear session data on the server
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).send('Failed to logout');
+    }
+    res.clearCookie('sessionId'); // Clear the session cookie if using cookies
+    res.sendStatus(200);
+  });
 });
+
 
 
 

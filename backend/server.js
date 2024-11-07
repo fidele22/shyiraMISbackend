@@ -45,19 +45,23 @@ app.use(bodyParser.json()); // If using body-parser
 //   credentials: true, // If you're using cookies or authorization headers
 // }));
 // Allow requests from your Vercel frontend
-const allowedOrigins = ['https://shyira-log-mis.vercel.app'];
+// Define allowed origins
+const allowedOrigins = ['https://shyira-log-mis.vercel.app']; // Add other URLs if needed
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+    if (allowedOrigins.includes(origin) || !origin) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS found'));
+      callback(new Error('Not allowed by CORS'));
     }
   },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Define allowed methods if needed
+  credentials: true, // Allow cookies if used for authentication
 };
 
 app.use(cors(corsOptions));
+
 
 connectDB();
 
@@ -111,7 +115,7 @@ app.use('/api/RepairRequisition',RepairRequisition)
 app.post('/api/logout', (req, res) => {
   console.log('Logout request received');
   try {
-    res.status(200).json({ message: 'Logged out successfully. Please delete your token on the client side.' });
+    res.status(200).json({ message: 'Logged out successfully. Please !!!.' });
   } catch (err) {
     console.error('Error during logout:', err); // Log the error
     res.status(500).json({ message: 'Server error during logout' });

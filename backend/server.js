@@ -38,12 +38,26 @@ const app = express();
 app.use(express.json()); // Or use body-parser's JSON parser
 app.use(bodyParser.json()); // If using body-parser
 
-app.use(cors({
-  origin: 'http://localhost:3000', // Replace with your frontend's local address and port
-  methods: 'GET,POST,PUT,DELETE',
-  allowedHeaders: 'Content-Type,Authorization',
-  credentials: true, // If you're using cookies or authorization headers
-}));
+// app.use(cors({
+//   origin: 'http://localhost:3000', // Replace with your frontend's local address and port
+//   methods: 'GET,POST,PUT,DELETE',
+//   allowedHeaders: 'Content-Type,Authorization',
+//   credentials: true, // If you're using cookies or authorization headers
+// }));
+// Allow requests from your Vercel frontend
+const allowedOrigins = ['https://shyira-log-mis.vercel.app'];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS found'));
+    }
+  },
+};
+
+app.use(cors(corsOptions));
 
 connectDB();
 

@@ -3,7 +3,7 @@ const Grid = require('gridfs-stream');
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb+srv://fidelehirwa23:K9Z0AKzw5EHhJ6nH@cluster0.pcjespr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
+    await mongoose.connect('mongodb+srv://fidelehirwa23:K9Z0AKzw5EHhJ6nH@cluster0.pcjespr.mongodb.net/shyiradb?retryWrites=true&w=majority&appName=Cluster0', {
       //useNewUrlParser: true,
      // useUnifiedTopology: true,
     });

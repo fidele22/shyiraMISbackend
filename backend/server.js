@@ -46,7 +46,7 @@ app.use(bodyParser.json()); // If using body-parser
 // }));
 // Allow requests from your Vercel frontend
 // Define allowed origins
-const allowedOrigins = ['https://shyira-log-mis.vercel.app','https://api.render.com']; // Add other URLs if needed
+const allowedOrigins = ['https://shyira-log-mis.vercel.app']; // Add other URLs if needed
 
 const corsOptions = {
   origin: function (origin, callback) {

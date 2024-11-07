@@ -6,7 +6,7 @@ const Service = require('../models/service');
 const Department = require('../models/department');
 
 const createAdmin = async () => {
-  await mongoose.connect('mongodb://localhost:27017/shyiradb', {
+  await mongoose.connect('mongodb+srv://fidelehirwa23:K9Z0AKzw5EHhJ6nH@cluster0.pcjespr.mongodb.net/shyiradb?retryWrites=true&w=majority&appName=Cluster0', {
   
   });
 

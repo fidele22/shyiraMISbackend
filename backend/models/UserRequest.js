@@ -11,6 +11,7 @@ const itemSchema = new mongoose.Schema({
 const UserRequestSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User ', required: true },
   department: { type: String, required: true },
+  service: { type: String, required: true },
   items: [itemSchema],
   hodName: { type: String, required: true },
   hodSignature: { type: String },

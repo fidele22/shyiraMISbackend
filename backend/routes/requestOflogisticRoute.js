@@ -3,11 +3,11 @@ const multer = require('multer');
 const router = express.Router();
 const upload = multer({ dest: 'uploads/' });
 const Item = require('../models/stockItems');
-
 const LogisticRequest = require('../models/requestOfLogistic');
 const VerifiedLogisticRequest = require ('../models/logisticRequestVerified')
 const ApprovedLogisticRequest =require('../models/approvedLogisticRequest')
 const RecievedLogisticRequest = require('../models/recievedLogisticRequest')
+const RejectedItemOrder = require('../models/logisticItemRejected')
 
 
 
@@ -113,6 +113,29 @@ router.get('/received-order', async (req, res) => {
   } catch (err) {
     console.error('Error:', err);
     res.status(500).json({ message: 'Server Error' });
+  }
+});
+//router to fetch received logistic request from recievedlogistci request collection
+router.get('/rejected-item-order', async (req, res) => {
+  try {
+    const receivedlogisticrequests = await RejectedItemOrder.find();
+    res.json(receivedlogisticrequests);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+router.get('/rejected-item-order/:id', async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const request = await RejectedItemOrder.findById(requestId); // Assuming Mongoose model
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+    res.json(request);
+  } catch (error) {
+    console.error('Error fetching request:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 // Example route to fetch a single logistic request by ID
@@ -291,8 +314,44 @@ router.post('/received/:id', async (req, res) => {
   }
 });
 
-// fuel logistic requisition 
+// Reject a logistic item request
 
+router.post('/rejectItemOrder/:id', async (req, res) => {
+
+  try {
+
+    const requestId = req.params.id;
+    const requestToReject = await LogisticRequest.findById(requestId);
+    if (!requestToReject) {
+
+      return res.status(404).json({ message: 'Request not found' });
+
+    }
+    // Create a new rejected request document
+
+    const rejectedRequest = new RejectedItemOrder({
+      date: requestToReject.date,
+      supplierName: requestToReject.supplierName,
+      items: requestToReject.items,
+      logisticSignature: requestToReject.logisticSignature,
+
+    });
+
+
+    // Save the rejected request
+
+    await rejectedRequest.save();
+    await LogisticRequest.findByIdAndDelete(requestId);
+    res.status(200).json({ message: 'Request rejected successfully' });
+
+  } catch (error) {
+
+    console.error('Error rejecting request:', error);
+    res.status(500).json({ message: 'Server error' });
+
+  }
+
+});
 
 
 router.post('/repair', async (req, res) => {

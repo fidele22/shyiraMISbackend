@@ -1,76 +1,53 @@
+
 const express = require('express');
 const router = express.Router();
+const authMiddleware = require('../middlewares/userAthu')
+const User = require('../models/user');
+//const middleware= require('../middlewares/userAthu')
+const upload = require('../middlewares/upload');
 const multer = require('multer');
 const path = require('path');
-const jwt = require('jsonwebtoken');
-const User = require('../models/user');
-const authMiddleware = require('../middlewares/userAthu')
-const bcrypt = require('bcrypt');
 
-// Middleware for file uploads
+// Configure Multer for file uploads (signatures)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = process.env.UPLOAD_PATH || path.join(__dirname, 'uploads/');
-    cb(null, uploadPath);
+    cb(null, 'uploads/signatures/');
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
+    cb(null, `${req.user.id}_${Date.now()}${path.extname(file.originalname)}`);
+  },
 });
-const upload = multer({ storage: storage });
 
-// Middleware to authenticate user
-const authenticate = async (req, res, next) => {
-  const token = req.headers['authorization'];
-  if (!token) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
 
+// Update user route with signature upload
+router.put('/:id', upload.single('signature'), async (req, res) => {
   try {
-    const decoded = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET || 'your_jwt_secret');
-    req.user = await User.findById(decoded.userId);
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Unauthorized' });
-  }
-};
-
-// GET profile route
-router.get('/get', authenticate, async (req, res) => {
-    try {
-        const userId = req.user.id; // Access the user ID from the request
-        const user = await User.findById(userId).select('-password'); // Fetch user data excluding password
-        res.json(user); // Respond with user data
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
-      }
-    });
-    
-// PUT profile route (update)
-router.put('/profile', [authenticate, upload.single('signature')], async (req, res) => {
-  try {
-    const { firstName, lastName, phone, positionName, serviceName, departmentName } = req.body;
-
-    const updatedData = {
+    const { positionName, serviceName, departmentName, firstName, lastName, phone, email, role } = req.body;
+    const userId = req.params.id;
+    let updateData = {
       firstName,
       lastName,
       phone,
+      email,
+      role,
       positionName,
-      serviceName,
       departmentName,
+      serviceName
     };
-
-    // If a new signature file is uploaded
+  
+    // If a file is uploaded, add the path to updateData
     if (req.file) {
-      updatedData.signature = req.file.path;
+      updateData.signature = req.file.path;
     }
 
-    const user = await User.findByIdAndUpdate(req.user._id, updatedData, { new: true });
-    res.json({ message: 'Profile updated successfully', user });
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+
+    res.status(200).json(updatedUser);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating profile' });
+    console.error(error);
+    res.status(400).json({ error: error.message });
   }
 });
+
 
 module.exports = router;

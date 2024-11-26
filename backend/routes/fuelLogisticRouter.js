@@ -89,6 +89,28 @@ router.get('/fuel-order', async (req, res) => {
   }
 });
 
+  // Route to fetch all approved fuel logistic requests
+  router.get('/get-recieved-fuelorder', async (req, res) => {
+    try {
+      const fuellogisticreceived = await RecievedFuelOrder.find();
+      res.json(fuellogisticreceived);
+    } catch (err) {
+      console.error('Error:', err);
+      res.status(500).json({ message: 'Server Error' });
+    }
+  });
+  
+  // Route to fetch all approved fuel logistic requests
+  router.get('/get-rejected-fuelorder', async (req, res) => {
+    try {
+      const fuellogisticrejected = await RejectedFuelOrder.find();
+      res.json(fuellogisticrejected);
+    } catch (err) {
+      console.error('Error:', err);
+      res.status(500).json({ message: 'Server Error' });
+    }
+  });
+  
   // Route to fetch a single logistic request by ID
   router.get('/:id', async (req, res) => {
     try {
@@ -160,6 +182,7 @@ router.post('/recieved-fuel/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // Route to handle rejection of a logistic fuel request
 

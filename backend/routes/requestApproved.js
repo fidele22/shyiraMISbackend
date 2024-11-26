@@ -1,16 +1,15 @@
 const express = require('express');
 const mongoose = require('mongoose');
-
 const router = express.Router();
 const jwt = require('jsonwebtoken'); 
-const JWT_SECRET = 'your_jwt_secret';// Ensure this is included
+const JWT_SECRET = 'your_jwt_secret';
 const ApprovedRequest = require('../models/approvedRequest');
-const RecievedRequest = require('../models/itemRequestRecieved')
-const RejectedRequest =require ('../models/itemRequisitionRejected')
-const ApprovedFuelRequest = require ('../models/approvedfuelRequest')
-const RecievedFuelRequest = require ('../models/fuelRequestRecieved')
-const UserRequest =require ('../models/UserRequest')
-const verifiedRequest =require ('../models/itemRequisitionVerified')
+const RecievedRequest = require('../models/itemRequestRecieved');
+const RejectedRequest =require ('../models/itemRequisitionRejected');
+const ApprovedFuelRequest = require ('../models/approvedfuelRequest');
+const RecievedFuelRequest = require ('../models/fuelRequestRecieved');
+const UserRequest =require ('../models/UserRequest');
+const verifiedRequest =require ('../models/itemRequisitionVerified');
 
 // Repost approved request to received collection
 router.post('/receive/:requestId', async (req, res) => {
@@ -199,11 +198,14 @@ router.post('/fuel-recieved/:id', async (req, res) => {
 
     await forwardedData.save();
 
+   // Optionally, remove the approved request from the ApprovedRequest collection
+   await ApprovedFuelRequest.findByIdAndDelete(req.params.id);
     res.status(200).json(updatedRequisition);
   } catch (error) {
     console.error('Error verifying requisition:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
   module.exports = router;

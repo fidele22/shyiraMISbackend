@@ -4,7 +4,6 @@ const path = require('path');
 const jwt = require('jsonwebtoken'); 
 const JWT_SECRET = 'your_jwt_secret';// Ensure this is included
 const UserRequest = require('../models/UserRequest');
-const UserRepairRequest = require ('../models/repairRequisitionForm')
 const stockItem = require('../models/stockItems');
 const ItemRequisitionVerified = require('../models/itemRequisitionVerified');
 const ItemRequisitionRejected = require ('../models/itemRequisitionRejected')
@@ -45,7 +44,7 @@ const authMiddleware = (req, res, next) => {
 
 router.post('/submit', authMiddleware, async (req, res) => {
   try {
-    const { department, hodName, hodSignature, items, date } = req.body;
+    const { department,service, hodName, hodSignature, items, date } = req.body;
 
     if (!items) {
       return res.status(400).json({ error: 'Items field is missing.' });
@@ -88,6 +87,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
     const newRequest = new UserRequest({
       userId: userId,
       department,
+      service,
       hodName,
       hodSignature,
       items: validItems,
@@ -161,6 +161,22 @@ router.get('/recieved-request', async (req, res) => {
     res.status(500).json({ message: 'Error fetching received requests', error });
   }
 });
+// Get all received requests for a specific user
+router.get('/rejected-user-request', async (req, res) => {
+  try {
+  
+    const rejecteduserRequests = await ItemRequisitionRejected.find();
+
+    if (rejecteduserRequests.length === 0) {
+      return res.status(404).json({ message: 'No received requests found for this user' });
+    }
+
+    res.json(rejecteduserRequests);
+  } catch (error) {
+    console.error('Error fetching received requests by userId:', error);
+    res.status(500).json({ message: 'Error fetching received requests', error });
+  }
+});
 
 // Example route to fetch a single logistic request by ID
 router.get('/:id', async (req, res) => {
@@ -190,6 +206,21 @@ router.get('/recieved-request/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+router.get('/rejected-user-request/:id', async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const request = await ItemRequisitionRejected.findById(requestId); // Assuming Mongoose model
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+    res.json(request);
+  } catch (error) {
+    console.error('Error fetching request:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 router.put('/:id', async (req, res) => {
   try {
@@ -238,6 +269,7 @@ router.put('/verified/:id', async (req, res) => {
     const forwardData = {
       userId: updatedRequest.userId,
       department: updatedRequest.department,
+      service: updatedRequest.service,
       items: updatedRequest.items.map(item => ({
         itemId: item.itemId,
         itemName: item.itemName,
@@ -264,6 +296,9 @@ router.put('/verified/:id', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
+
 router.put('/rejected/:id', async (req, res) => {
   try {
   
@@ -283,6 +318,7 @@ router.put('/rejected/:id', async (req, res) => {
     const forwardData = {
       userId: updatedRequest.userId,
       department: updatedRequest.department,
+      service: updatedRequest.service,
       items: updatedRequest.items.map(item => ({
         itemId: item.itemId,
         itemName: item.itemName,
@@ -310,22 +346,7 @@ router.put('/rejected/:id', async (req, res) => {
   }
 });
 
-// Get all received requests for a specific user
-//router.get('/', async (req, res) => {
-//  try {
-//    const { userId } = req.params;
-//    const receivedRequests = await RecievedRequest.find({ userId: userId });
-//
-//    if (receivedRequests.length === 0) {
-//      return res.status(404).json({ message: 'No received requests found for this user' });
-//    }
-//
-//    res.json(receivedRequests);
-//  } catch (error) {
-//    console.error('Error fetching received requests by userId:', error);
-//    res.status(500).json({ message: 'Error fetching received requests', error });
-//  }
-//});
+
 
 // fetching item name
 router.get('/api/getData', async (req, res) => {

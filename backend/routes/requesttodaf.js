@@ -5,8 +5,8 @@ const ItemRequisitionVerified = require('../models/itemRequisitionVerified');
 const ApprovedRequest = require('../models/approvedRequest');
 const FuelRequestVerified = require('../models/fuelRequestVerified')
 const ApprovedFuelRequest = require ('../models/approvedfuelRequest')
-
-
+const ItemRequisitionRejected =require('../models/itemRequisitionRejected')
+const RejectedFuelRequest = require('../models/rejectuserfuelRequest')
 
 // user fetch its verified requisition according to its ID
 router.get('/user-verified', authMiddleware, async (req, res) => {
@@ -134,6 +134,80 @@ router.post('/approved/:id', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+// Add this in your routes file
+router.post('/rejectedrequests', async (req, res) => {
+  const { requisitionId } = req.body;
+  try {
+    // Fetch the requisition document by ID
+    const requisition = await ItemRequisitionVerified.findById(requisitionId);
+
+    if (!requisition) {
+      return res.status(404).json({ message: 'Requisition not found' });
+    }
+
+    // Move the requisition to the rejected collection
+    await ItemRequisitionRejected.create(requisition.toObject());
+
+    // Remove the requisition from the forwarded collection
+    await ItemRequisitionVerified.findByIdAndDelete(requisitionId);
+
+    res.status(200).json({ message: 'Requisition rejected successfully' });
+  } catch (error) {
+    console.error('Error rejecting requisition:', error);
+    res.status(500).json({ message: 'Failed to reject requisition' });
+  }
+});
+
+router.put('/rejected/:id', async (req, res) => {
+  try {
+    const updateData = { ...req.body };
+
+    // Ensure the 'clicked' field is included if it's in the request body
+    if (req.body.clicked !== undefined) {
+      updateData.clicked = req.body.clicked;
+    }
+
+    // Find and update the request, ensuring it returns the updated document
+    const updatedRequest = await ItemRequisitionVerified.findByIdAndUpdate(
+      req.params.id, 
+      updateData, 
+      { new: true }
+    );
+
+    // If no document found, return 404
+    if (!updatedRequest) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    // Forward the rejected request to a new collection
+    const forwardData = {
+      userId: updatedRequest.userId,
+      department: updatedRequest.department,
+      items: updatedRequest.items.map(item => ({
+        itemId: item.itemId,
+        itemName: item.itemName,
+        quantityRequested: item.quantityRequested,
+        quantityReceived: item.quantityReceived,
+        observation: item.observation
+      })),
+      date: updatedRequest.date,
+      hodName: updatedRequest.hodName,
+      hodSignature: updatedRequest.hodSignature,
+      logisticName: updatedRequest.logisticName,
+      logisticSignature: updatedRequest.logisticSignature,
+    };
+
+    const forwardedRequest = new ItemRequisitionRejected(forwardData);
+    await forwardedRequest.save();
+
+    // Remove the original request from the ItemRequisitionVerified collection
+    await ItemRequisitionVerified.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Request rejected and forwarded successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Route to update and forward on another collection a fuel requisition by ID
 router.put('/updatefuel/:id', async (req, res) => {
@@ -188,5 +262,33 @@ router.post('/approvefuel/:id', async (req, res) => {
   }
 });
 
+
+  // Reject fuel requisition
+  router.post('/reject/:id', async (req, res) => {
+    try {
+      const requestToReject = await FuelRequestVerified.findById(req.params.id);
+      
+      if (!requestToReject) {
+        return res.status(404).json({ message: 'Request not found' });
+      }
+  
+      // Move the request to a rejected collection (you need to implement this logic)
+     // Adjust the path as necessary
+  
+      const rejectedRequest = new RejectedFuelRequest({
+        ...requestToReject._doc, 
+        rejectedAt: new Date(), 
+         
+      });
+  
+      await rejectedRequest.save();
+      await FuelRequestVerified.findByIdAndDelete(req.params.id); // Optionally delete the original request
+  
+      res.json({ message: 'Requisition rejected successfully!' });
+    } catch (error) {
+      console.error('Error rejecting requisition:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
 
 module.exports = router;

@@ -4,7 +4,8 @@ const JWT_SECRET = 'your_jwt_secret';
 const router = express.Router();
 const FuelRequisition = require('../models/fuelRequisition');
 const ForwardedFuelRequest = require('../models/fuelRequestVerified');
-//const authMiddleware = require('../middlewares/userAthu')
+const RecievedFuelRequest = require ('../models/fuelRequestRecieved');
+const RejectedFuelRequest = require('../models/rejectuserfuelRequest');
 
 const multer = require('multer');
 const path = require('path');
@@ -47,7 +48,7 @@ router.post('/submit',authMiddleware, upload.single('file'), async (req, res) =>
     const file = req.file ? req.file.path : '';
 
     // Fetch the previous request for the same car
-    const previousRequisition = await FuelRequisition.findOne({ carPlaque }).sort({ createdAt: -1 });
+    const previousRequisition = await RecievedFuelRequest.findOne({ carPlaque }).sort({ createdAt: -1 });
 
     let average = 0;
     if (previousRequisition) {
@@ -59,6 +60,7 @@ router.post('/submit',authMiddleware, upload.single('file'), async (req, res) =>
       average = (kilometers - previousKilometers) / (previousRemainingLiters + previousQuantityReceived - remainingLiters);
     } else {
       // Handle case where no previous requisition exists
+      
       average = 0; // or any default value
     }
     const userId = req.userId; // Extracted from token
@@ -183,7 +185,34 @@ router.post('/verify/:id', async (req, res) => {
   }
 });
 
-
+  // Reject fuel requisition
+  router.post('/reject/:id', async (req, res) => {
+    try {
+      const requestToReject = await FuelRequisition.findById(req.params.id);
+      
+      if (!requestToReject) {
+        return res.status(404).json({ message: 'Request not found' });
+      }
+  
+      // Move the request to a rejected collection (you need to implement this logic)
+     // Adjust the path as necessary
+  
+      const rejectedRequest = new RejectedFuelRequest({
+        originalRequisitionId: requestToReject._id, // Add this line
+        ...requestToReject._doc, 
+        rejectedAt: new Date(), 
+         
+      });
+  
+      await rejectedRequest.save();
+      await FuelRequisition.findByIdAndDelete(req.params.id); // Optionally delete the original request
+  
+      res.json({ message: 'Requisition rejected successfully!' });
+    } catch (error) {
+      console.error('Error rejecting requisition:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
 
 
 module.exports = router;

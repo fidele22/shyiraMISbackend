@@ -40,13 +40,11 @@ originalRequisitionId: {
   },
   average: {
     type: String,
-    required: true,
-  
+    required: true,  
   },
-  reason: {
-    type: String,
-    
-  },
+
+  // totaFuelGain:{type:Number,required:true},
+
   file:{type:String},
   createdAt: {
     type: Date,

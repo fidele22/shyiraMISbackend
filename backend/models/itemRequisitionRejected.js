@@ -12,6 +12,7 @@ const itemSchema = new mongoose.Schema({
 const RejectedRequestSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   department: { type: String, required: true },
+  servive:String,
   items: [itemSchema],
   date: {type:Date},
   hodName: { type: String, required: true },

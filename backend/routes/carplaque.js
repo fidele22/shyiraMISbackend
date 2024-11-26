@@ -1,26 +1,20 @@
-// routes/formRoutes.js
-
 
 const express = require('express');
-const CarPlaque = require('../models/carPlaque');
-const Reason = require('../models/reason');
-const Destination = require('../models/destination');
-
-
 const router = express.Router();
 const Car = require('../models/carPlaque');
 
 // POST route to register a car
 router.post('/cars', async (req, res) => {
   try {
-    const { registerNumber, modeOfVehicle, dateOfReception, depart } = req.body;
+    const { registerNumber, modeOfVehicle, dateOfReception, depart,destination } = req.body;
     
     // Create a new car entry
     const newCar = new Car({
       registerNumber,
       modeOfVehicle,
       dateOfReception,
-      depart
+      depart,
+      destination,
     });
 
     await newCar.save();

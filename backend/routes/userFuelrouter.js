@@ -114,7 +114,7 @@ router.get('/recievedfuel', authMiddleware, async (req, res) => {
   }
 });
   // get all recieved fuel requestion 
-  router.get('/recievedfuel', async (req, res) => {
+  router.get('/get-recievedfuel', async (req, res) => {
     try {
      
       const recievedFuelRequest = await RecievedFuelRequest.find();
@@ -207,7 +207,7 @@ router.get('/recievedfuel', authMiddleware, async (req, res) => {
 
 
 
-  // Reject requisition
+  // Reject fuel requisition
 router.post('/reject/:id', async (req, res) => {
   try {
     const requestToReject = await ApprovedFuelRequest.findById(req.params.id);

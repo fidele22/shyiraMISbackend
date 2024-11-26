@@ -9,8 +9,7 @@ const ApprovedRequest = require('../models/approvedRequest');
 // POST request to add a new stock item
 router.post('/add', async (req, res) => {
   const { name, quantity, pricePerUnit } = req.body;
-  let totalAmount=0;
-  totalAmount = quantity* pricePerUnit;
+  let totalAmount = quantity * pricePerUnit;
 
   try {
     const newItem = new StockItem({
@@ -21,54 +20,56 @@ router.post('/add', async (req, res) => {
     });
 
     await newItem.save();
-   // Automatically create corresponding stock data for each item
-   const stockDatas = newItem.map(item => ({
-    itemId: item._id,
-    entry: {
-      quantity: item.quantity,
-      pricePerUnit: item.pricePerUnit,
-      totalAmount: item.totalAmount
-    },
-    exit: {
-      quantity: 0,
-      pricePerUnit: 0,
-      totalAmount: 0
-    },
-    balance: {
-      quantity: item.quantity,
-      pricePerUnit: item.pricePerUnit,
-      totalAmount: item.totalAmount
-    }
-  }));
 
-  await StockData.save(stockDatas);
-// Automatically create corresponding initial stock history for each item
-const stockHistory = newItem.map(item => ({
-itemId: item._id,
-entry: {
-  quantity: item.quantity,
-  pricePerUnit: item.pricePerUnit,
-  totalAmount: item.totalAmount
-},
-exit: {
-  quantity: 0,
-  pricePerUnit: 0,
-  totalAmount: 0
-},
-balance: {
-  quantity: item.quantity,
-  pricePerUnit: item.pricePerUnit,
-  totalAmount: item.totalAmount
-}
-}));
+    // Create corresponding stock data for the new item
+    const stockData = new StockData({
+      itemId: newItem._id,
+      entry: {
+        quantity: newItem.quantity,
+        pricePerUnit: newItem.pricePerUnit,
+        totalAmount: newItem.totalAmount
+      },
+      exit: {
+        quantity: 0,
+        pricePerUnit: 0,
+        totalAmount: 0
+      },
+      balance: {
+        quantity: newItem.quantity,
+        pricePerUnit: newItem.pricePerUnit,
+        totalAmount: newItem.totalAmount
+      }
+    });
 
-await StockHistory.save(stockHistory);
+    await stockData.save(); // Save the stock data
 
-  res.status(200).send({ success: true });
-} catch (error) {
-  console.error(error); // Log the error
-  res.status(500).send({ success: false, error: error.message });
-}
+    // Create corresponding initial stock history for the new item
+    const stockHistory = new StockHistory({
+      itemId: newItem._id,
+      entry: {
+        quantity: newItem.quantity,
+        pricePerUnit: newItem.pricePerUnit,
+        totalAmount: newItem.totalAmount
+      },
+      exit: {
+        quantity: 0,
+        pricePerUnit: 0,
+        totalAmount: 0
+      },
+      balance: {
+        quantity: newItem.quantity,
+        pricePerUnit: newItem.pricePerUnit,
+        totalAmount: newItem.totalAmount
+      }
+    });
+
+    await stockHistory.save(); // Save the stock history
+
+    res.status(200).send({ success: true });
+  } catch (error) {
+    console.error(error); // Log the error
+    res.status(500).send({ success: false, error: error.message });
+  }
 });
 
 // DELETE /api/stocks/:id - Delete stock item and related stock data and stock histories

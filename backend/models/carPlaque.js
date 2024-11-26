@@ -17,7 +17,12 @@ const carSchema = new mongoose.Schema({
   depart: {
     type: String,
     required: true
+  },
+  destination:{
+    type:String,
+    required: true
   }
+
 });
 
 const Car = mongoose.model('Car', carSchema);
